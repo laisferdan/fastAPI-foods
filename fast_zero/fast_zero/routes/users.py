@@ -1,7 +1,7 @@
 from http import HTTPStatus
-from sqlalchemy import create_engine, select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, HTTPException, Depends
 from fast_zero.database.database import get_session
 from fast_zero.models.models import User
 from fast_zero.schemas.users import (
@@ -24,20 +24,15 @@ database = []  # Lista provisória para fins de estudo
     '/users/', status_code=HTTPStatus.CREATED, response_model=UserPublic
 )
 def create_user(user: UserSchema, session: Session = Depends(get_session)):
-
-
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
-
 
         )
     )
 
     if db_user:
         if db_user.username == user.username:
-
-
             raise HTTPException(
                 status_code=HTTPStatus.BAD_REQUEST,
                 detail='Username already exists',
@@ -54,7 +49,6 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
     session.add(db_user)
     session.commit()
     session.refresh(db_user)
-
     return db_user
 
 
@@ -69,7 +63,6 @@ def update_user(user_id: int, user: UserSchema):
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='User not found'
         )
-
     user_with_id = UserDB(**user.model_dump(), id=user_id)
     database[user_id - 1] = user_with_id
 
