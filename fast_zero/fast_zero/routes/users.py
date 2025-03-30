@@ -1,9 +1,7 @@
 from http import HTTPStatus
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
 from fast_zero.database.database import get_session
 from fast_zero.models.models import User
 from fast_zero.schemas.users import (
@@ -29,6 +27,7 @@ def create_user(user: UserSchema, session: Session = Depends(get_session)):
     db_user = session.scalar(
         select(User).where(
             (User.username == user.username) | (User.email == user.email)
+
         )
     )
 
