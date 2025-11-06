@@ -37,6 +37,11 @@ Principais objetivos do backend:
   - `POST /recomendacoes/consumptions` → registrar consumo.
   - `POST /recomendacoes/feedback` → like/dislike.
 - Usuários e receitas: endpoints de estudo já existentes.
+- Analytics — Meus Registros (JWT obrigatório):
+  - `GET /analytics/me/summary` → total de kcal, nº de refeições, total de alimentos.
+  - `GET /analytics/me/calories-by-day` → série de kcal por dia no período.
+  - `GET /analytics/me/distribution-by-meal` → kcal e percentual por tipo de refeição.
+  - Parâmetros (query): `start_date`, `end_date`, `tz` (opcional; defaults a janela de 7 dias, UTC).
 
 Quando faltar perfil, a API retorna: “Atualize suas informações pessoais para receber recomendações de refeição.”
 
@@ -82,6 +87,10 @@ poetry run task test
 pytest -s -x --cov=fast_zero --cov-report=term-missing --cov-fail-under=90 -vv
 ```
 
+Marcadores úteis:
+- Rodar apenas testes rápidos (exclui perf): `pytest -q -m "not slow"`
+- Incluir testes de performance: `pytest -q -m slow`
+
 ## Autenticação (JWT)
 Gere um token com `sub = user_id` (ver `fast_zero/security/auth.py`) e envie:
 ```
@@ -93,6 +102,12 @@ Authorization: Bearer <token>
 - Soma de kcal do dia e meta restante.
 - Seleção dentro de ±10% da meta restante.
 - Sinal por categorias recentes e ajuste por feedback.
+
+## Analytics (resumo)
+- Painel "Meus Registros" com métricas por usuário autenticado.
+- Resumo do período: total de kcal, número de refeições, total de alimentos.
+- Série diária: kcal por dia no intervalo.
+- Distribuição por tipo de refeição: kcal e percentuais.
 
 ### Machine Learning
 - Embeddings por calorias: o motor agora calcula um vetor 2D normalizado a partir de kcal e usa similaridade por cosseno entre a meta restante e as receitas para refinar o ranking. Peso inicial do sinal: `sim * 10.0` (ajustável).

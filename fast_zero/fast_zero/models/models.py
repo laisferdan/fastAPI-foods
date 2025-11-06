@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import func
+from sqlalchemy import func, Index
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
 table_registry = registry()
@@ -56,6 +56,10 @@ class UserProfile:
 @table_registry.mapped_as_dataclass
 class ConsumptionLog:
     __tablename__ = 'consumption_logs'
+    __table_args__ = (
+        Index('ix_consumption_user_date', 'user_id', 'consumed_at'),
+        Index('ix_consumption_user_meal', 'user_id', 'tipo_refeicao'),
+    )
 
     id: Mapped[int] = mapped_column(init=False, primary_key=True)
     user_id: Mapped[int]

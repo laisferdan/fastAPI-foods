@@ -40,6 +40,9 @@ quote-style = 'single'
 [tool.pytest.ini_options]
 pythonpath = "."
 addopts = "-p no:warnings --cov=fast_zero --cov-report=term-missing --cov-fail-under=90"
+markers = [
+    "slow: performance or heavy tests",
+]
 
 [tool.taskipy.tasks]
 lint = 'ruff check .; ruff check . --diff'

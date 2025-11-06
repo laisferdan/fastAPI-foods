@@ -4,6 +4,7 @@ from fastapi import FastAPI
 
 from fast_zero.routes import recipes, users
 from fast_zero.routes import recommendations
+from fast_zero.routes import analytics
 from fast_zero.schemas.users import Message
 
 app = FastAPI(
@@ -12,7 +13,7 @@ app = FastAPI(
     description='API Univesp',
 )
 
-database = []  # Lista provisória para fins de estudo
+database = []  
 
 
 @app.get('/', status_code=HTTPStatus.OK, response_model=Message)
@@ -23,3 +24,4 @@ def read_root():
 app.include_router(recipes.router)
 app.include_router(users.router)
 app.include_router(recommendations.router)
+app.include_router(analytics.router)

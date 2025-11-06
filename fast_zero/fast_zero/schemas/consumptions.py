@@ -1,12 +1,20 @@
 from datetime import datetime
+from enum import Enum
 
 from pydantic import BaseModel, PositiveInt
+
+
+class MealType(str, Enum):
+    cafe_da_manha = "cafe_da_manha"
+    almoco = "almoço"
+    jantar = "jantar"
+    lanche = "lanche"
 
 
 class ConsumptionIn(BaseModel):
     recipe_id: PositiveInt
     kcal: PositiveInt
-    tipo_refeicao: str
+    tipo_refeicao: MealType
     consumed_at: datetime | None = None
     model_config = {
         "json_schema_extra": {
