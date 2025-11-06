@@ -11,6 +11,8 @@ fastapi = {extras = ["standard"], version = "^0.115.0"}
 sqlalchemy = "^2.0.35"
 pydantic-settings = "^2.5.2"
 alembic = "^1.13.3"
+python-jose = "^3.3.0"
+loguru = "^0.7.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -37,7 +39,7 @@ quote-style = 'single'
 
 [tool.pytest.ini_options]
 pythonpath = "."
-addopts = '-p no:warnings'
+addopts = "-p no:warnings --cov=fast_zero --cov-report=term-missing --cov-fail-under=90"
 
 [tool.taskipy.tasks]
 lint = 'ruff check .; ruff check . --diff'

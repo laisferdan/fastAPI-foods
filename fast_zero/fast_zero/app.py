@@ -3,6 +3,7 @@ from http import HTTPStatus
 from fastapi import FastAPI
 
 from fast_zero.routes import recipes, users
+from fast_zero.routes import recommendations
 from fast_zero.schemas.users import Message
 
 app = FastAPI(
@@ -21,3 +22,4 @@ def read_root():
 
 app.include_router(recipes.router)
 app.include_router(users.router)
+app.include_router(recommendations.router)
