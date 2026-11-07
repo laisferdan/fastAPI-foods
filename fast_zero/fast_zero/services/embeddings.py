@@ -11,7 +11,9 @@ def normalize_min_max(value: float, min_v: float, max_v: float) -> float:
     return max(0.0, min(1.0, x))
 
 
-def kcal_vector2d(kcal: float, min_kcal: float, max_kcal: float) -> Tuple[float, float]:
+def kcal_vector2d(
+    kcal: float, min_kcal: float, max_kcal: float
+) -> Tuple[float, float]:
     x = normalize_min_max(kcal, min_kcal, max_kcal)
     return (x, 1.0 - x)
 

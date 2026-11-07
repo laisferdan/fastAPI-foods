@@ -10,13 +10,17 @@ from fast_zero.models.models import ConsumptionLog
 
 
 def _between_clause(start: datetime, end: datetime):
-    return (ConsumptionLog.consumed_at >= start) & (ConsumptionLog.consumed_at <= end)
-
-
-def get_summary(session: Session, user_id: int, start: datetime, end: datetime) -> Tuple[int, int, int]:
-    total_kcal_stmt: Select = select(func.coalesce(func.sum(ConsumptionLog.kcal), 0)).where(
-        (ConsumptionLog.user_id == user_id) & _between_clause(start, end)
+    return (ConsumptionLog.consumed_at >= start) & (
+        ConsumptionLog.consumed_at <= end
     )
+
+
+def get_summary(
+    session: Session, user_id: int, start: datetime, end: datetime
+) -> Tuple[int, int, int]:
+    total_kcal_stmt: Select = select(
+        func.coalesce(func.sum(ConsumptionLog.kcal), 0)
+    ).where((ConsumptionLog.user_id == user_id) & _between_clause(start, end))
     total_meals_stmt: Select = select(func.count()).where(
         (ConsumptionLog.user_id == user_id) & _between_clause(start, end)
     )
@@ -33,8 +37,13 @@ def get_calories_by_day(
     session: Session, user_id: int, start: datetime, end: datetime
 ) -> List[Tuple[datetime, int]]:
     stmt: Select = (
-        select(func.date(ConsumptionLog.consumed_at), func.coalesce(func.sum(ConsumptionLog.kcal), 0))
-        .where((ConsumptionLog.user_id == user_id) & _between_clause(start, end))
+        select(
+            func.date(ConsumptionLog.consumed_at),
+            func.coalesce(func.sum(ConsumptionLog.kcal), 0),
+        )
+        .where(
+            (ConsumptionLog.user_id == user_id) & _between_clause(start, end)
+        )
         .group_by(func.date(ConsumptionLog.consumed_at))
         .order_by(func.date(ConsumptionLog.consumed_at))
     )
@@ -53,14 +62,19 @@ def get_distribution_by_meal(
     session: Session, user_id: int, start: datetime, end: datetime
 ) -> List[Tuple[str, int, float]]:
     per_meal_stmt: Select = (
-        select(ConsumptionLog.tipo_refeicao, func.coalesce(func.sum(ConsumptionLog.kcal), 0))
-        .where((ConsumptionLog.user_id == user_id) & _between_clause(start, end))
+        select(
+            ConsumptionLog.tipo_refeicao,
+            func.coalesce(func.sum(ConsumptionLog.kcal), 0),
+        )
+        .where(
+            (ConsumptionLog.user_id == user_id) & _between_clause(start, end)
+        )
         .group_by(ConsumptionLog.tipo_refeicao)
         .order_by(ConsumptionLog.tipo_refeicao)
     )
-    total_stmt: Select = select(func.coalesce(func.sum(ConsumptionLog.kcal), 0)).where(
-        (ConsumptionLog.user_id == user_id) & _between_clause(start, end)
-    )
+    total_stmt: Select = select(
+        func.coalesce(func.sum(ConsumptionLog.kcal), 0)
+    ).where((ConsumptionLog.user_id == user_id) & _between_clause(start, end))
 
     rows = session.execute(per_meal_stmt).all()
     total_kcal = session.scalar(total_stmt) or 0

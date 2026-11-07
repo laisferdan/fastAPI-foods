@@ -2,20 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from typing import Iterable
 
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from fast_zero.models.models import RecommendationFeedback, RecipeModel, UserProfile
+from fast_zero.models.models import (
+    RecipeModel,
+    UserProfile,
+)
 from fast_zero.repositories.recommendation import (
     kcal_consumed_on,
     recent_categories,
     user_feedback_map,
 )
+from fast_zero.services.embeddings import cosine_similarity, kcal_vector2d
 from fast_zero.services.tdee import Profile, tdee
-from fast_zero.services.embeddings import kcal_vector2d, cosine_similarity
-from loguru import logger
 
 
 @dataclass
@@ -35,8 +37,12 @@ def _adequacao_percentual(kcal_restante: float, kcal_item: int) -> float:
     return round(perc, 2)
 
 
-def recommend_for_user(session: Session, user_id: int, on_date: date, top_n: int = 5) -> list[Recommendation]:
-    prof = session.scalar(select(UserProfile).where(UserProfile.user_id == user_id))
+def recommend_for_user(
+    session: Session, user_id: int, on_date: date, top_n: int = 5
+) -> list[Recommendation]:
+    prof = session.scalar(
+        select(UserProfile).where(UserProfile.user_id == user_id)
+    )
     if not prof:
         return []
 
@@ -51,7 +57,7 @@ def recommend_for_user(session: Session, user_id: int, on_date: date, top_n: int
     consumido = kcal_consumed_on(session, user_id, on_date)
     restante = max(0.0, meta_diaria - consumido)
     logger.debug(
-        "Reco context user_id={}, date={}, tdee={}, consumed={}, remaining={}",
+        'Reco context user_id={}, date={}, tdee={}, consumed={}, remaining={}',
         user_id,
         on_date,
         round(meta_diaria, 2),
@@ -92,18 +98,18 @@ def recommend_for_user(session: Session, user_id: int, on_date: date, top_n: int
     for r in rows:
         s = score(r)
         if s >= 0:
-            scored.append(
-                (
-                    s,
-                    Recommendation(
-                        recipe_id=r.id,
-                        nome_refeicao=r.nome_refeicao,
-                        kcal=r.kcal,
-                        tipo=r.nome_refeicao,
-                        adequacao_percentual=_adequacao_percentual(restante, r.kcal),
+            scored.append((
+                s,
+                Recommendation(
+                    recipe_id=r.id,
+                    nome_refeicao=r.nome_refeicao,
+                    kcal=r.kcal,
+                    tipo=r.nome_refeicao,
+                    adequacao_percentual=_adequacao_percentual(
+                        restante, r.kcal
                     ),
-                )
-            )
+                ),
+            ))
 
     scored.sort(key=lambda x: x[0], reverse=True)
     return [rec for _, rec in scored[:top_n]]

@@ -1,9 +1,9 @@
 import math
 
-from fast_zero.fast_zero.services.embeddings import (
-    normalize_min_max,
-    kcal_vector2d,
+from fast_zero.services.embeddings import (
     cosine_similarity,
+    kcal_vector2d,
+    normalize_min_max,
 )
 
 

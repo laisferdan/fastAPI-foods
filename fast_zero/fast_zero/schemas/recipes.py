@@ -1,20 +1,22 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict, Field
+
+QUANTIDADE_PATTERN = r'^\d+(\.\d+)?g$'
 
 
-class Recipe(BaseModel):
-    id: int
+class RecipeCreate(BaseModel):
     nome_refeicao: str
-    nome_alimento: str
+    nome_alimento: str = Field(min_length=1)
     nome_categoria: str
-    quantidade: str
-    kcal: int
+    quantidade: str = Field(pattern=QUANTIDADE_PATTERN, examples=['250g'])
+    kcal: float = Field(ge=0)
     dia_semana: str
-    message: str
+
+
+class RecipePublic(RecipeCreate):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
 
 
 class RecipeList(BaseModel):
-    users: list[Recipe]
-
-
-class RecipeDB(Recipe):
-    id: int
+    recipes: list[RecipePublic]

@@ -1,56 +1,81 @@
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
-from fast_zero.schemas.recipes import Recipe, RecipeList
+from fast_zero.database.database import get_session
+from fast_zero.models.models import ConsumptionLog, RecipeModel
+from fast_zero.schemas.recipes import (
+    RecipeCreate,
+    RecipeList,
+    RecipePublic,
+)
 from fast_zero.schemas.users import Message
+from fast_zero.security.auth import get_current_user_id
 
 router = APIRouter(
-    prefix='/receitas',
-    tags=['Receitas'],
+    prefix='/recipes',
+    tags=['recipes'],
+    dependencies=[Depends(get_current_user_id)],
 )
 
-database = []
+DbSession = Annotated[Session, Depends(get_session)]
 
 
-@router.post(
-    '/recipes/', status_code=HTTPStatus.CREATED, response_model=Recipe
-)
-def create_recipe(recipe: Recipe):
-    recipe_data = Recipe(**recipe.model_dump())
-    database.append(recipe_data)
-
-    return recipe_data
-
-
-@router.get('/recipes/', response_model=RecipeList)
-def read_recipes():
-    return {'recipes': database}
-
-
-@router.put('/recipes/{recipe_id}', response_model=Recipe)
-def update_recipe(recipe_id: int, recipe: Recipe):
-    if recipe_id < 1 or recipe_id > len(database):
+def _get_or_404(session: Session, recipe_id: int) -> RecipeModel:
+    recipe = session.get(RecipeModel, recipe_id)
+    if recipe is None:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
         )
-
-    existing_recipe = database[recipe_id - 1]
-    updated_recipe_data = recipe.model_dump()
-
-    for key, value in updated_recipe_data.items():
-        setattr(existing_recipe, key, value)
-
-    return existing_recipe
+    return recipe
 
 
-@router.delete('/recipes/{recipe_id}', response_model=Message)
-def delete_recipe(recipe_id: int):
-    if recipe_id < 1 or recipe_id > len(database):
+@router.get('', response_model=RecipeList)
+def read_recipes(session: DbSession):
+    recipes = session.scalars(select(RecipeModel).order_by(RecipeModel.id))
+    return {'recipes': recipes.all()}
+
+
+@router.get('/{recipe_id}', response_model=RecipePublic)
+def read_recipe(recipe_id: int, session: DbSession):
+    return _get_or_404(session, recipe_id)
+
+
+@router.post('', status_code=HTTPStatus.CREATED, response_model=RecipePublic)
+def create_recipe(recipe: RecipeCreate, session: DbSession):
+    db_recipe = RecipeModel(**recipe.model_dump())
+    session.add(db_recipe)
+    session.commit()
+    session.refresh(db_recipe)
+    return db_recipe
+
+
+@router.put('/{recipe_id}', response_model=RecipePublic)
+def update_recipe(recipe_id: int, recipe: RecipeCreate, session: DbSession):
+    db_recipe = _get_or_404(session, recipe_id)
+    for key, value in recipe.model_dump().items():
+        setattr(db_recipe, key, value)
+    session.commit()
+    session.refresh(db_recipe)
+    return db_recipe
+
+
+@router.delete('/{recipe_id}', response_model=Message)
+def delete_recipe(recipe_id: int, session: DbSession):
+    db_recipe = _get_or_404(session, recipe_id)
+    in_use = session.scalar(
+        select(ConsumptionLog.id)
+        .where(ConsumptionLog.recipe_id == recipe_id)
+        .limit(1)
+    )
+    if in_use is not None:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='Recipe not found'
+            status_code=HTTPStatus.CONFLICT,
+            detail='Recipe is used by records',
         )
-
-    del database[recipe_id - 1]
-
-    return {'message': 'Recipe deleted successfully'}
+    session.delete(db_recipe)
+    session.commit()
+    return {'message': 'Recipe deleted'}

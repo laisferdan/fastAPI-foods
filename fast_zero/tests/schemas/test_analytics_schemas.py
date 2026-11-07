@@ -34,7 +34,7 @@ def test_analytics_params_with_only_start_sets_end_after():
 def test_analytics_params_enforces_order():
     start = datetime(2025, 1, 2, tzinfo=timezone.utc)
     end = datetime(2025, 1, 1, tzinfo=timezone.utc)
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='start_date'):
         AnalyticsParams(start_date=start, end_date=end)
 
 
@@ -47,5 +47,7 @@ def test_schema_models_serialization_examples():
     assert out_series.total_days == 1
     assert out_series.points[0].kcal == 500
 
-    dist = DistributionByMealOut(items=[{"tipo_refeicao": "almoço", "kcal": 600, "percent": 60.0}])
+    dist = DistributionByMealOut(
+        items=[{'tipo_refeicao': 'almoço', 'kcal': 600, 'percent': 60.0}]
+    )
     assert dist.items[0].percent == 60.0

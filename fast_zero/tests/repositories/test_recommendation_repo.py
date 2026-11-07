@@ -3,14 +3,14 @@ from datetime import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
-from fast_zero.fast_zero.models.models import (
+from fast_zero.models.models import (
     ConsumptionLog,
     RecipeModel,
     RecommendationFeedback,
     User,
     table_registry,
 )
-from fast_zero.fast_zero.repositories.recommendation import (
+from fast_zero.repositories.recommendation import (
     kcal_consumed_on,
     recent_categories,
     user_feedback_map,
@@ -77,27 +77,25 @@ def test_recent_categories_and_feedback():
         )
         s.add_all([r1, r2])
         s.flush()
-        s.add_all(
-            [
-                ConsumptionLog(
-                    user_id=u.id,
-                    recipe_id=r1.id,
-                    kcal=300,
-                    tipo_refeicao='jantar',
-                    consumed_at=datetime(2024, 1, 2, 20, 0, 0),
-                ),
-                ConsumptionLog(
-                    user_id=u.id,
-                    recipe_id=r2.id,
-                    kcal=80,
-                    tipo_refeicao='lanche',
-                    consumed_at=datetime(2024, 1, 2, 10, 0, 0),
-                ),
-                RecommendationFeedback(
-                    user_id=u.id, recipe_id=r1.id, feedback='dislike'
-                ),
-            ]
-        )
+        s.add_all([
+            ConsumptionLog(
+                user_id=u.id,
+                recipe_id=r1.id,
+                kcal=300,
+                tipo_refeicao='jantar',
+                consumed_at=datetime(2024, 1, 2, 20, 0, 0),
+            ),
+            ConsumptionLog(
+                user_id=u.id,
+                recipe_id=r2.id,
+                kcal=80,
+                tipo_refeicao='lanche',
+                consumed_at=datetime(2024, 1, 2, 10, 0, 0),
+            ),
+            RecommendationFeedback(
+                user_id=u.id, recipe_id=r1.id, feedback='dislike'
+            ),
+        ])
         s.commit()
 
         cats = recent_categories(s, u.id)

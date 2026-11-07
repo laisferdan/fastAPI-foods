@@ -3,7 +3,7 @@ name = "fast-zero"
 version = "0.1.0"
 description = ""
 authors = ["estelaoli23 <estelaoliveirareato23@outlook.com>"]
-readme = "README.md"
+readme = "../README.md"
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -11,8 +11,9 @@ fastapi = {extras = ["standard"], version = "^0.115.0"}
 sqlalchemy = "^2.0.35"
 pydantic-settings = "^2.5.2"
 alembic = "^1.13.3"
-python-jose = "^3.3.0"
 loguru = "^0.7.2"
+pyjwt = "^2.15.1"
+pwdlib = {extras = ["argon2"], version = "^0.3.1"}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -27,11 +28,14 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
 line-length = 79
-extend-exclude = ['migrations']
+extend-exclude = ['migration']
 
 [tool.ruff.lint]
 preview = true
 select = ['I', 'F', 'E', 'W', 'PL', 'PT']
+
+[tool.ruff.lint.per-file-ignores]
+'tests/**' = ['PLR2004', 'PLR0913', 'PLR0914', 'PLR0917']
 
 [tool.ruff.format]
 preview = true
@@ -48,6 +52,7 @@ markers = [
 lint = 'ruff check .; ruff check . --diff'
 format = 'ruff check . --fix; ruff format .'
 run = 'fastapi dev fast_zero/app.py'
+seed = 'python -m fast_zero.seeds.recipes'
 pre_test = 'task lint'
 test = 'pytest -s -x --cov=fast_zero -vv'
 post_test = 'coverage html'

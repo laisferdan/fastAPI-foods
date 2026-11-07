@@ -9,7 +9,9 @@ from fast_zero.models.models import ConsumptionLog
 
 
 def dt_midnight_utc(days_offset: int = 0) -> datetime:
-    today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    today = datetime.now(timezone.utc).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
     return today + timedelta(days=days_offset)
 
 

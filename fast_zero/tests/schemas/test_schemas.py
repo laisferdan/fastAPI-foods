@@ -1,14 +1,17 @@
 import pytest
 from pydantic import ValidationError
 
-from fast_zero.fast_zero.schemas.profile import UserProfileIn
-from fast_zero.fast_zero.schemas.feedback import FeedbackIn
-from fast_zero.fast_zero.schemas.consumptions import ConsumptionIn
+from fast_zero.schemas.consumptions import ConsumptionIn
+from fast_zero.schemas.feedback import FeedbackIn
+from fast_zero.schemas.profile import UserProfileIn
 
 
 def test_profile_validation_ok():
-    p = UserProfileIn(sexo='M', idade=28, peso_kg=75.0, altura_cm=180.0, nivel_atividade=1.55)
+    p = UserProfileIn(
+        sexo='M', idade=28, peso_kg=75.0, altura_cm=180.0, nivel_atividade=1.55
+    )
     assert p.sexo == 'M'
+
 
 def test_feedback_validation():
     FeedbackIn(recipe_id=1, feedback='like')

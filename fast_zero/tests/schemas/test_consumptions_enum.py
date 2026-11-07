@@ -1,15 +1,16 @@
-import pytest
 from datetime import datetime
+
+import pytest
 
 from fast_zero.schemas.consumptions import ConsumptionIn, MealType
 
 
 def test_consumption_in_accepts_enum_values():
     payload = {
-        "recipe_id": 1,
-        "kcal": 100,
-        "tipo_refeicao": MealType.almoco,
-        "consumed_at": datetime(2025, 1, 1),
+        'recipe_id': 1,
+        'kcal': 100,
+        'tipo_refeicao': MealType.almoco,
+        'consumed_at': datetime(2025, 1, 1),
     }
     obj = ConsumptionIn(**payload)
     assert obj.tipo_refeicao == MealType.almoco
@@ -17,10 +18,10 @@ def test_consumption_in_accepts_enum_values():
 
 def test_consumption_in_rejects_invalid_meal_type():
     payload = {
-        "recipe_id": 1,
-        "kcal": 100,
-        "tipo_refeicao": "invalid",
-        "consumed_at": datetime(2025, 1, 1),
+        'recipe_id': 1,
+        'kcal': 100,
+        'tipo_refeicao': 'invalid',
+        'consumed_at': datetime(2025, 1, 1),
     }
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match='tipo_refeicao'):
         ConsumptionIn(**payload)

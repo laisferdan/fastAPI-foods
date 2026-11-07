@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import func, Index
+from sqlalchemy import Index, func
 from sqlalchemy.orm import Mapped, mapped_column, registry
 
 table_registry = registry()
@@ -33,7 +33,7 @@ class RecipeModel:
     nome_alimento: Mapped[str]
     nome_categoria: Mapped[str]
     quantidade: Mapped[str]
-    kcal: Mapped[int]
+    kcal: Mapped[float]
     dia_semana: Mapped[str]
 
 
@@ -66,9 +66,11 @@ class ConsumptionLog:
     recipe_id: Mapped[int]
     kcal: Mapped[int]
     tipo_refeicao: Mapped[str]
+    # None => o servidor usa now(); o ORM omite None no INSERT
     consumed_at: Mapped[datetime] = mapped_column(
-        init=False, server_default=func.now()
+        default=None, server_default=func.now()
     )
+    quantidade_g: Mapped[float | None] = mapped_column(default=None)
 
 
 @table_registry.mapped_as_dataclass

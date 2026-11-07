@@ -1,7 +1,8 @@
-from http import HTTPStatus
 from datetime import date
+from http import HTTPStatus
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -20,15 +21,14 @@ from fast_zero.schemas.recommendations import (
     RecommendationList,
 )
 from fast_zero.schemas.users import Message
-from fast_zero.services.recommendation_engine import recommend_for_user
 from fast_zero.security.auth import get_current_user_id
-from loguru import logger
+from fast_zero.services.recommendation_engine import recommend_for_user
 
-router = APIRouter(prefix="/recomendacoes", tags=["Recomendações"])
+router = APIRouter(prefix='/recomendacoes', tags=['Recomendações'])
 
 
 @router.get(
-    "/recommend",
+    '/recommend',
     response_model=RecommendationList | Message,
     status_code=HTTPStatus.OK,
 )
@@ -36,18 +36,36 @@ def get_recommendations(
     session: Session = Depends(get_session),
     current_user_id: int = Depends(get_current_user_id),
 ):
-    logger.info("Generating recommendations for user_id={} on {}", current_user_id, date.today())
-    items = recommend_for_user(session, user_id=current_user_id, on_date=date.today())
+    logger.info(
+        'Generating recommendations for user_id={} on {}',
+        current_user_id,
+        date.today(),
+    )
+    items = recommend_for_user(
+        session, user_id=current_user_id, on_date=date.today()
+    )
     if not items:
-        return {"message": "Atualize suas informações pessoais para receber recomendações de refeição."}
-    return {"items": [RecommendationItem.model_validate(i.__dict__) for i in items]}
+        return {
+            'message': (
+                'Atualize suas informações pessoais para receber '
+                'recomendações de refeição.'
+            )
+        }
+    return {
+        'items': [RecommendationItem.model_validate(i.__dict__) for i in items]
+    }
 
 
-@router.get("/profile", response_model=UserProfileOut | Message)
-def get_profile(session: Session = Depends(get_session), current_user_id: int = Depends(get_current_user_id)):
-    prof = session.scalar(select(UserProfile).where(UserProfile.user_id == current_user_id))
+@router.get('/profile', response_model=UserProfileOut | Message)
+def get_profile(
+    session: Session = Depends(get_session),
+    current_user_id: int = Depends(get_current_user_id),
+):
+    prof = session.scalar(
+        select(UserProfile).where(UserProfile.user_id == current_user_id)
+    )
     if not prof:
-        return {"message": "Perfil não encontrado"}
+        return {'message': 'Perfil não encontrado'}
     return UserProfileOut(
         user_id=prof.user_id,
         sexo=prof.sexo,
@@ -58,7 +76,7 @@ def get_profile(session: Session = Depends(get_session), current_user_id: int = 
     )
 
 
-@router.put("/profile", response_model=UserProfileOut)
+@router.put('/profile', response_model=UserProfileOut)
 def put_profile(
     profile: UserProfileIn = ...,
     session: Session = Depends(get_session),
@@ -66,9 +84,13 @@ def put_profile(
 ):
     user = session.scalar(select(User).where(User.id == current_user_id))
     if not user:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
 
-    prof = session.scalar(select(UserProfile).where(UserProfile.user_id == current_user_id))
+    prof = session.scalar(
+        select(UserProfile).where(UserProfile.user_id == current_user_id)
+    )
     if prof:
         prof.sexo = profile.sexo
         prof.idade = profile.idade
@@ -97,7 +119,11 @@ def put_profile(
     )
 
 
-@router.post("/consumptions", response_model=ConsumptionOut, status_code=HTTPStatus.CREATED)
+@router.post(
+    '/consumptions',
+    response_model=ConsumptionOut,
+    status_code=HTTPStatus.CREATED,
+)
 def post_consumption(
     payload: ConsumptionIn = ...,
     session: Session = Depends(get_session),
@@ -105,7 +131,9 @@ def post_consumption(
 ):
     user = session.scalar(select(User).where(User.id == current_user_id))
     if not user:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
 
     log = ConsumptionLog(
         user_id=current_user_id,
@@ -127,7 +155,9 @@ def post_consumption(
     )
 
 
-@router.post("/feedback", response_model=FeedbackOut, status_code=HTTPStatus.CREATED)
+@router.post(
+    '/feedback', response_model=FeedbackOut, status_code=HTTPStatus.CREATED
+)
 def post_feedback(
     payload: FeedbackIn = ...,
     session: Session = Depends(get_session),
@@ -135,7 +165,9 @@ def post_feedback(
 ):
     user = session.scalar(select(User).where(User.id == current_user_id))
     if not user:
-        raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail="User not found")
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='User not found'
+        )
 
     fb = RecommendationFeedback(
         user_id=current_user_id,
@@ -145,4 +177,9 @@ def post_feedback(
     session.add(fb)
     session.commit()
     session.refresh(fb)
-    return FeedbackOut(id=fb.id, user_id=fb.user_id, recipe_id=fb.recipe_id, feedback=fb.feedback)
+    return FeedbackOut(
+        id=fb.id,
+        user_id=fb.user_id,
+        recipe_id=fb.recipe_id,
+        feedback=fb.feedback,
+    )
